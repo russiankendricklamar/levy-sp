@@ -152,21 +152,3 @@ jupyter
 ```
 
 ---
-
-## Citation
-
-```bibtex
-@misc{galkin2026levy,
-  title     = {Efficiency of L{\'{e}}vy Processes and Stochastic Volatility Models
-               in Pricing Structured Products: Calibration to Real Option Market Data},
-  author    = {Galkin, Egor},
-  year      = {2026},
-  note      = {Working paper}
-}
-```
-
----
-
-## License
-
-MIT
