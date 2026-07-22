@@ -1,117 +1,168 @@
-# Lévy Processes and Stochastic-Volatility Models in Structured-Product Pricing
+# Lévy Processes and Stochastic-Volatility Models for Structured-Product Pricing
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+Reproducible research code for pricing structured products under seven models: Black-Scholes, Merton jump-diffusion, Variance Gamma, NIG, CGMY, Heston, and Bates.
 
-Reproducible codebase for the master's thesis:
-> **"The Effectiveness of Lévy Processes and Stochastic-Volatility Models in Pricing Structured Products"**  
-> Egor S. Galkin, July 2026
-
-Seven option-pricing models (Black–Scholes, Merton, VG, NIG, CGMY, Heston, Bates) are calibrated to **real market implied-volatility smiles** (Yahoo Finance, July 2026) across three asset classes (S&P 500, AAPL, SPY) and applied to price four structured products.
+This repository accompanies the master's thesis **"The Effectiveness of Lévy Processes and Stochastic-Volatility Models in Pricing Structured Products"** and provides a unified implementation of characteristic-function pricing, Carr–Madan FFT, Monte Carlo path simulation, calibrated market parameters, and benchmark result tables.
 
 ---
 
-## Key Results
+## Scope
 
-| Finding | Detail |
+The project studies how model choice affects:
+
+- implied-volatility smile fit
+- pricing of structured products
+- Greeks
+- delta-hedging error distributions
+
+**Products covered**
+
+- Capital-protected note
+- ATM digital call
+- Barrier reverse convertible (BRC)
+- Phoenix autocall
+
+**Models covered**
+
+| Class | Models |
 |---|---|
-| Best smile fit | Bates: IV-RMSE 0.5–0.9% vs 4–6% for Black–Scholes |
-| Model risk in prices | Fair BRC coupon shifts up to **+82%** (Heston/Bates vs BS) on real data |
-| Hedging | Unhedgeable jump/gap risk dominates P&L tail — richer model does not remove it |
+| Diffusion | Black-Scholes |
+| Exponential Lévy | Merton, Variance Gamma, NIG, CGMY |
+| Stochastic volatility | Heston, Bates |
 
 ---
 
-## Repository Layout
+## Data and assumptions
 
-```
+Market inputs were collected from live option chains in July 2026 for three underlyings: the S&P 500 index (`^SPX`), Apple (`AAPL`), and the SPY ETF.
+
+Key assumptions baked into the calibration artifacts:
+
+- Risk-free rate: 3.71%
+- Assets: `^SPX`, `AAPL`, `SPY`, each with 8 option maturities
+- Spots: SPX 7457.69, AAPL 333.74, SPY 743.29
+- European products priced via Carr–Madan FFT; path-dependent products priced via Monte Carlo
+- CGMY is European-only in this implementation — no path simulator
+
+---
+
+## Main results
+
+Calibration quality (IV-RMSE, %) is strongest for Bates across all three assets, followed by Heston, then pure Lévy models, with Black-Scholes weakest:
+
+| Model | S&P 500 | AAPL | SPY |
+|---|---:|---:|---:|
+| BS | 6.45 | 4.37 | 6.24 |
+| Merton | 2.00 | 2.70 | 1.79 |
+| VG | 2.34 | 2.89 | 2.03 |
+| NIG | 2.04 | 2.80 | 1.73 |
+| CGMY | 1.68 | 2.76 | 1.48 |
+| Heston | 0.91 | 1.13 | 0.81 |
+| Bates | 0.54 | 0.91 | 0.56 |
+
+On SPX-calibrated parameters, model choice materially shifts fair product terms:
+
+| Model | Note participation % | Digital price | BRC coupon % | Autocall coupon % |
+|---|---:|---:|---:|---:|
+| BS | 63.50 | 5.3929 | 4.279 | 4.482 |
+| Merton | 58.45 | 5.9031 | 6.118 | 5.561 |
+| VG | 58.58 | 5.6905 | 5.835 | 5.673 |
+| NIG | 58.27 | 5.7617 | 5.880 | 5.563 |
+| CGMY | 56.77 | 5.9336 | — | — |
+| Heston | 55.01 | 6.2922 | 7.772 | 6.572 |
+| Bates | 54.80 | 6.3124 | 7.635 | 6.782 |
+
+Hedging-error tables show strongly negative skew and heavy kurtosis across all hedger models, consistent with unhedgeable jump/gap risk dominating the left tail of P&L rather than model choice itself.
+
+---
+
+## Repository structure
+
+```text
 levy-sp/
 ├── README.md
 ├── LICENSE
 ├── CITATION.cff
 ├── requirements.txt
-├── run_example.py          # end-to-end demo: prices all products × all models
+├── run_example.py
 ├── lib/
-│   ├── bootstrap.py        # loader: B.load() → single context dict
-│   ├── levylib.py          # Lévy char. functions, Carr–Madan FFT, BS analytics
-│   ├── svmodels.py         # Heston + Bates char. functions, unified FFT dispatcher
-│   ├── simulators.py       # MC path simulation (exact Lévy schemes + Andersen QE)
-│   └── products.py         # pricers: capital-protected note, digital, BRC, autocall
-└── data/
-    ├── real_smiles.parquet         # cleaned market smiles (SPX / AAPL / SPY)
-    ├── calibration_real.json       # calibrated model parameters
-    ├── data_meta.json              # spots, risk-free rate, metadata
-    ├── calibration_rmse_table.csv  # fit quality (IV-RMSE per model/asset)
-    ├── master_prices_real.csv      # reference product prices (for reproducibility check)
-    ├── greeks_table.csv
-    └── hedging_errors_table.csv    # P&L VaR / CVaR of delta-hedging errors
+│   ├── bootstrap.py
+│   ├── levylib.py
+│   ├── svmodels.py
+│   ├── simulators.py
+│   └── products.py
+├── data/
+│   ├── real_smiles.parquet
+│   ├── calibration_real.json
+│   ├── data_meta.json
+│   ├── calibration_rmse_table.csv
+│   ├── master_prices_real.csv
+│   ├── greeks_table.csv
+│   └── hedging_errors_table.csv
+└── thesis.pdf
 ```
 
 ---
 
-## Quick Start
+## Installation
 
 ```bash
 git clone https://github.com/russiankendricklamar/levy-sp.git
 cd levy-sp
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-
-python run_example.py                  # prices all products on S&P 500
-python run_example.py --asset AAPL     # same on Apple
-python run_example.py --paths 100000   # higher MC precision
 ```
 
-Output: console table + `prices_out.csv`.
+Dependencies: `numpy>=1.24`, `scipy>=1.10`, `pandas>=1.5`, `pyarrow>=10.0`. Pure CPU — no GPU required.
+
+---
+
+## Quick start
+
+```bash
+python run_example.py                  # all products, all models, S&P 500
+python run_example.py --asset AAPL     # same on Apple
+python run_example.py --paths 100000   # higher Monte Carlo precision
+```
+
+Output: a console comparison table plus `prices_out.csv`.
 
 ---
 
 ## Usage
 
-### Load everything
-
 ```python
-import sys; sys.path.insert(0, "lib")
+import sys
+sys.path.insert(0, "lib")
+
 import bootstrap as B
-
 ctx = B.load()
-S0     = ctx["meta"]["assets"]["^SPX"]["spot"]          # 7457.69
-r      = ctx["rf"]                                       # 0.0371
-prod   = ctx["products"]
-params = ctx["calib"]["^SPX"]["Bates"]["params"]         # calibrated Bates params
+
+S0 = ctx["meta"]["assets"]["^SPX"]["spot"]
+r = ctx["rf"]
+q = 0.0
+prod = ctx["products"]
+params = ctx["calib"]["^SPX"]["Bates"]["params"]
+
+note     = prod.note_participation(S0, r, q, "Bates", params)
+digital  = prod.digital_call(S0, r, q, "Bates", params)
+brc      = prod.fair_coupon_brc(S0, r, q, "Bates", params, n_paths=40000, seed=0)
+autocall = prod.fair_coupon_ac(S0, r, q, "Bates", params, n_paths=40000, seed=0)
 ```
 
-### Price structured products
+All pricers accept any of the seven model strings: `"BS"`, `"Merton"`, `"VG"`, `"NIG"`, `"CGMY"`, `"Heston"`, `"Bates"`.
 
-```python
-# Capital-protected note (3y) — fair participation rate (%)
-prod.note_participation(S0, r, 0.0, "Bates", params)
+> ⚠️ CGMY supports European products only (no path simulator).
 
-# ATM digital call (1y, payout=10) — price
-prod.digital_call(S0, r, 0.0, "Bates", params)
-
-# Barrier Reverse Convertible (1y, KI=70%) — fair coupon (%)
-prod.fair_coupon_brc(S0, r, 0.0, "Bates", params, n_paths=40_000, seed=0)
-
-# Phoenix Autocall (3y, quarterly, AC=100/CB=70/PB=60, memory) — annual coupon (%)
-prod.fair_coupon_ac(S0, r, 0.0, "Bates", params, n_paths=40_000, seed=0)
-```
-
-All pricers accept any of the 7 model strings: `"BS"`, `"Merton"`, `"VG"`, `"NIG"`, `"CGMY"`, `"Heston"`, `"Bates"`.  
-> ⚠️ CGMY supports **European products only** (no path simulator).
-
-### Direct option pricing (FFT)
+### Direct option pricing
 
 ```python
 sv = ctx["svmodels"]
 sv.price_call_any(K=5000, T=1.0, S0=S0, r=r, q=0.0, model="Heston", p=params)
 ```
 
-### Custom parameters / own calibration
-
-All pricers accept an arbitrary parameter dict `p`. See `data/calibration_real.json` for the key schema of each model.
-
----
-
-## Product Customisation
+### Product customisation
 
 | Product | Key arguments (defaults) |
 |---|---|
@@ -120,66 +171,55 @@ All pricers accept an arbitrary parameter dict `p`. See `data/calibration_real.j
 | BRC | `T=1.0`, `ki=0.70`, `n_paths=40000`, `seed=0` |
 | Phoenix Autocall | `T=3.0`, `obs_per_year=4`, `ac=1.00`, `cb=0.70`, `pb=0.60`, `memory=True` |
 
-Example — BRC with 60% barrier, 2-year tenor:
-
-```python
-prod.fair_coupon_brc(S0, r, 0.0, "Heston", params, T=2.0, ki=0.60)
-```
-
 ---
 
-## Models
+## Methodology
 
-| Model | Type | Characteristic exponent ψ(u) |
-|---|---|---|
-| Black–Scholes | GBM | −½σ²u² |
-| Merton | Jump-diffusion | −½σ²u² + λ(e^{iuμ_J − ½δ²_J u²} − 1) |
-| Variance Gamma | Pure-jump Lévy | −(1/ν) ln(1 − iuθν + ½σ²νu²) |
-| NIG | Pure-jump Lévy | −δ(√(α²−(β+iu)²) − √(α²−β²)) |
-| CGMY | Pure-jump Lévy | CΓ(−Y)[(M−iu)^Y − M^Y + (G+iu)^Y − G^Y] |
-| Heston | Stochastic vol | CIR variance process, closed-form CF |
-| Bates | SV + jumps | Heston + Merton jumps |
+Under exponential Lévy dynamics, the discounted asset price is martingale-corrected via
 
-FFT pricing follows Carr & Madan (1999) with damping parameter α = 1.5, N = 2¹³ grid points, η = 0.25 step, Simpson quadrature weights. Verified against analytic BS to max error 2.2 × 10⁻⁷.
+S_t = S_0 · exp((r − q + ω)t + X_t),  where ω = −ψ(−i)
 
-Path simulation: exact incremental schemes for BS/Merton/VG/NIG; Andersen Quadratic-Exponential (QE) scheme for Heston/Bates (stable under Feller condition violation); CGMY — European FFT only.
+and ψ(u) is the characteristic exponent of the underlying Lévy process.
+
+European options are priced with the Carr–Madan damped Fourier transform, using default numerical settings α = 1.5, N = 2¹³, η = 0.25. Heston and Bates use closed-form characteristic functions; path-dependent products are simulated by Monte Carlo, with Heston/Bates paths generated via Andersen's Quadratic-Exponential (QE) scheme, which stays stable even when the Feller condition is violated by calibration.
 
 ---
 
 ## Reproducibility
 
-Reference prices are stored in `data/master_prices_real.csv`.  
-- **European** products (note, digital): exact FFT — deterministic, bit-for-bit reproducible.  
-- **Path-dependent** (BRC, autocall): Monte Carlo, matches reference within ±0.05–0.3 pp at `n_paths=40000`; increase paths for tighter tolerance.
+- European products (note, digital) are **deterministic** given the FFT grid — bit-for-bit reproducible.
+- Path-dependent products (BRC, autocall) are Monte Carlo estimates; results match reference values within ±0.05–0.3 pp at 40,000 paths. Increase `n_paths` for tighter convergence.
 
 ---
 
-## Dependencies
+## Limitations
 
-```
-numpy>=1.24
-scipy>=1.10
-pandas>=1.5
-pyarrow>=10.0
-```
+This is a research implementation, not a production pricing library.
 
-Pure CPU — no GPU required.
+- Calibration reflects a single market snapshot (July 2026), not a repeated time series
+- CGMY has no path simulator in the current implementation
+- FX smile calibration is excluded — listed FX-ETF options were too illiquid
+- No transaction costs, liquidity effects, slippage, or funding asymmetry
+- Single-underlying products only — no local-stochastic-volatility, rough-volatility, or stochastic-rate extensions
+
+---
+
+## Thesis
+
+The full thesis document is included as `thesis.pdf`.
 
 ---
 
 ## Citation
 
-If you use this codebase, please cite:
-
 ```bibtex
 @mastersthesis{galkin2026levy,
-  author  = {Galkin, Egor S.},
-  title   = {The Effectiveness of Lévy Processes and Stochastic-Volatility Models
-             in Pricing Structured Products},
-  school  = {},
-  year    = {2026},
-  month   = {July},
-  url     = {https://github.com/russiankendricklamar/levy-sp}
+  author = {Galkin, Egor S.},
+  title  = {The Effectiveness of Lévy Processes and Stochastic-Volatility Models
+            in Pricing Structured Products},
+  year   = {2026},
+  month  = {July},
+  url    = {https://github.com/russiankendricklamar/levy-sp}
 }
 ```
 
@@ -187,4 +227,4 @@ If you use this codebase, please cite:
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see `LICENSE`.
