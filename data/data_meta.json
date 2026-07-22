@@ -1,0 +1,71 @@
+{
+  "fetch_date": "2026-07-19T08:56:55.994147",
+  "risk_free": 0.03707000017166138,
+  "assets": {
+    "^SPX": {
+      "cls": "index",
+      "spot": 7457.69,
+      "n_quotes": 1147,
+      "n_maturities": 8,
+      "maturities": [
+        0.0219,
+        0.0411,
+        0.063,
+        0.0849,
+        0.1971,
+        0.449,
+        0.835,
+        1.9083
+      ],
+      "iv_range": [
+        0.10723962512823816,
+        0.454852074767068
+      ]
+    },
+    "AAPL": {
+      "cls": "equity",
+      "spot": 333.74,
+      "n_quotes": 162,
+      "n_maturities": 8,
+      "maturities": [
+        0.0246,
+        0.0493,
+        0.0876,
+        0.2409,
+        0.4134,
+        0.6626,
+        1.1608,
+        1.6591
+      ],
+      "iv_range": [
+        0.27005466910205383,
+        0.5140647573101538
+      ]
+    },
+    "SPY": {
+      "cls": "etf",
+      "spot": 743.29,
+      "n_quotes": 641,
+      "n_maturities": 8,
+      "maturities": [
+        0.0219,
+        0.0493,
+        0.1068,
+        0.2409,
+        0.3641,
+        0.6626,
+        0.9446,
+        1.9083
+      ],
+      "iv_range": [
+        0.1063362734640569,
+        0.44803264403256976
+      ]
+    }
+  },
+  "fx": {
+    "symbol": "FXE/EURUSD",
+    "n_returns": 2145,
+    "note": "Listed FX-ETF options too illiquid for smile calibration; underlying returns used for tail analysis"
+  }
+}
